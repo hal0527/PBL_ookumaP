@@ -1,0 +1,21 @@
+{
+ "timeZone": "Asia/Tokyo",
+ "dependencies": {
+   "enabledAdvancedServices": [{
+     "userSymbol": "Sheets",
+     "serviceId": "sheets",
+     "version": "v4"
+   }]
+ },
+ "exceptionLogging": "STACKDRIVER",
+ "gmail": {
+   "name": "エビデンス管理",
+   "logoUrl": "https://cdn.rawgit.com/webdog/octicons-png/bd02e5bc/clock.svg.png",
+     "contextualTriggers": [{
+     "unconditional": {},
+     "onTriggerFunction": "buildAddOn"
+   }],
+   "primaryColor": "#4285F4",
+   "secondaryColor": "#4285F4"
+ }
+}
