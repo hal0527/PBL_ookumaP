@@ -1,21 +1,31 @@
 {
- "timeZone": "Asia/Tokyo",
- "dependencies": {
-   "enabledAdvancedServices": [{
-     "userSymbol": "Sheets",
-     "serviceId": "sheets",
-     "version": "v4"
-   }]
- },
- "exceptionLogging": "STACKDRIVER",
- "gmail": {
-   "name": "エビデンス管理",
-   "logoUrl": "https://cdn.rawgit.com/webdog/octicons-png/bd02e5bc/clock.svg.png",
-     "contextualTriggers": [{
-     "unconditional": {},
-     "onTriggerFunction": "buildAddOn"
-   }],
-   "primaryColor": "#4285F4",
-   "secondaryColor": "#4285F4"
- }
+  "timeZone": "Asia/Tokyo",
+  "dependencies": {
+    "enabledAdvancedServices": [{
+      "userSymbol": "Sheets",
+      "serviceId": "sheets",
+      "version": "v4"
+    }]
+  },
+  "exceptionLogging": "STACKDRIVER",
+  "gmail": {
+    "name": "エビデンス管理",
+    "logoUrl": "https://cdn.rawgit.com/webdog/octicons-png/bd02e5bc/clock.svg.png",
+    "contextualTriggers": [{
+      "unconditional": {},
+      "onTriggerFunction": "buildAddOn"
+    }],
+    "universalActions": [{
+      "text": "進捗の管理",
+      "runFunction": "buildAddOn"
+    }, {
+      "text": "プロジェクトの追加・管理",
+      "runFunction": "sheetAddOn"
+    }, {
+      "text": "シートの作成・設定",
+      "runFunction": "setAddOn"
+    }],
+    "primaryColor": "#4285F4",
+    "secondaryColor": "#4285F4"
+  }
 }
