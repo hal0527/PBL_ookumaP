@@ -3,14 +3,14 @@ var excel_key = "1Ecr-7B_PmZKvx1sdO2xk_VF1Rj3r_dsC9cS2lfTzDmc";
 var arr_project = [];
 var arr_work = [];
 var arr_staff = [];
+var arr_todo = [];
 
 function getMasterData(){
 
   var list_1 = Sheets.Spreadsheets.Values.get(excel_key, 'project!A:B');
   var list_2 = Sheets.Spreadsheets.Values.get(excel_key, 'staff!A:B');
-  var list_3 = Sheets.Spreadsheets.Values.get(excel_key, 'work!A:B');
-  
-  Logger.log("getMasterData 1");
+  var list_3 = Sheets.Spreadsheets.Values.get(excel_key, 'work!A:C');
+  var list_4 = Sheets.Spreadsheets.Values.get(excel_key, 'todo!A:G');
   
   for(var i=0;i < list_1.values.length; i++){
    if (i==0) continue;
@@ -20,7 +20,7 @@ function getMasterData(){
       'sales': list_1.values[i][2]
     });
   }  
- Logger.log("getMasterData 2");
+// Logger.log("getMasterData get project");
   for(var i=0;i < list_2.values.length; i++){
    if (i==0) continue;
    arr_staff.push({
@@ -29,18 +29,37 @@ function getMasterData(){
       'sales': list_2.values[i][2]
     });
   }  
- 
-Logger.log("getMasterData 3"); 
+// Logger.log("getMasterData get staff"); 
+
   for(var i=0;i < list_3.values.length; i++){
    if (i==0) continue;
    arr_work.push({
       'work_id': list_3.values[i][0],
       'work_name': list_3.values[i][1],
-      'sales': list_3.values[i][2]
+      'work_content': list_3.values[i][2]
     });
   }  
+//Logger.log("getMasterData get work");  
+
+  for(var i=0;i < list_4.values.length; i++){
+   if (i==0) continue;
+   arr_todo.push({
+      'project_id': list_4.values[i][0],
+      'staff_id': list_4.values[i][2],
+      'work_id': list_4.values[i][4],
+      'work_name': list_4.values[i][5],
+      'over_percent': list_4.values[i][6]
+    });
+  }  
+//  Logger.log("getMasterData get todo");  
+
+
+//  for (var i = 0; i < arr_todo.length; i++) {
+////    if arr_todo.
+//    
+//     Logger.log("arr_todoxxxxxxx:"+arr_todo[i].project_id);
+//  }
   
-Logger.log("getMasterData 4");   
 }
 
 function buildAddOn(e) {
@@ -73,7 +92,6 @@ function buildAddOn(e) {
                           .setHeader(CardService.newCardHeader()
                                                 .setTitle('No sheet data.')).build());
   }
-
   return cards;
 } 
 
@@ -99,11 +117,15 @@ function BuildCard(project_data){
 
   Logger.log("BuildCard 1");
   
+  Logger.log("project_data:"+project_data.project_id);
+  
   var project_status = ProjectData(project_data.project_id);
   var card = CardService.newCardBuilder();
   var section = CardService.newCardSection();
 //  var step_data = Sheets.Spreadsheets.Values.get('1DdCvhhFb-i3P3Px78sdww3qcv0o2iOpUvYMdM1gtK9M', 'sheet2!d1:h1').values;
-  var step_data = Sheets.Spreadsheets.Values.get(excel_key, 'sheet2!d1:h1').values;
+//  var step_data = Sheets.Spreadsheets.Values.get(excel_key, 'sheet2!d1:h1').values;
+
+  var step_data = Sheets.Spreadsheets.Values.get(excel_key, 'todo!E:F').values;
   var row_number = (project_data.project_id).toString();
   var checkboxGroup = CardService.newSelectionInput()
                                    .setType(CardService.SelectionInputType.CHECK_BOX)
@@ -111,6 +133,43 @@ function BuildCard(project_data){
                                    .setOnChangeAction(CardService.newAction()
                                                                  .setFunctionName("StatusChange")
                                                                  .setParameters({row_number:row_number})); 
+////各メンバーの担当業務
+//  var send_email1;
+  for (var i = 0; i < arr_todo.length; i++) {
+//    Logger.log("arr_todo:"+arr_todo[i].work_name);
+     var name = arr_todo[i].work_name;
+    if (arr_todo[i].project_id == project_data.project_id) {
+//      Logger.log("work_id:"+ arr_todo[i].work_id);
+     
+       if (arr_todo[i].over_percent == 'Done'){
+         checkboxGroup.addItem(name, name, true);
+       }
+       else{
+         checkboxGroup.addItem(name, name, false);
+       }
+       
+//       for(var j = 0 ;j< arr_work.length;j++){ 
+//
+//         if (arr_work[j].work_id == arr_todo[i].work_id.toUpperCase()){
+//                 Logger.log("work_id _xxxxx_:"+arr_work[j].work_content);
+//            var text1 = arr_work[j].work_name+'のテンプレートを呼び出す';
+//            var composeAction1 = CardService.newAction()
+//                                           .setFunctionName('SendEmail')
+//                                           .setParameters({row_number:'4'});
+//            var send_email1 = CardService.newTextButton()
+//                                        .setText(text1)
+//                                        .setComposeAction(composeAction1, CardService.ComposedEmailType.REPLY_AS_DRAFT);  
+//         
+//           section.addWidget(send_email1);
+//         }
+//
+//       }
+    
+    }
+ }   
+    
+  
+  
   for (var i = 0; i < step_data[0].length; i++) {
     var name = step_data[0][i];
     if(project_status == undefined){
@@ -122,42 +181,70 @@ function BuildCard(project_data){
     }
   }
   
-  var text1 = step_data[0][0] +'のテンプレートを呼び出す';
-  var composeAction1 = CardService.newAction()
-                                 .setFunctionName('SendEmail')
-                                 .setParameters({row_number:'4'});
-  var send_email1 = CardService.newTextButton()
-                              .setText(text1)
-                              .setComposeAction(composeAction1, CardService.ComposedEmailType.REPLY_AS_DRAFT);  
-                              
-  var text2 = step_data[0][1] +'のテンプレートを呼び出す';
-  var composeAction2 = CardService.newAction()
-                                 .setFunctionName('SendEmail')
-                                 .setParameters({row_number:'5'});
-  var send_email2 = CardService.newTextButton()
-                              .setText(text2)
-                              .setComposeAction(composeAction2, CardService.ComposedEmailType.REPLY_AS_DRAFT);   
-  var text3 = step_data[0][2] +'のテンプレートを呼び出す';
-  var composeAction3 = CardService.newAction()
-                                 .setFunctionName('SendEmail')
-                                 .setParameters({row_number:'6'});
-  var send_email3 = CardService.newTextButton()
-                              .setText(text3)
-                              .setComposeAction(composeAction3, CardService.ComposedEmailType.REPLY_AS_DRAFT); 
-  var text4 = step_data[0][3] +'のテンプレートを呼び出す';
-   var composeAction4 = CardService.newAction()
-                                 .setFunctionName('SendEmail')
-                                 .setParameters({row_number:'7'});
-  var send_email4 = CardService.newTextButton()
-                              .setText(text4)
-                              .setComposeAction(composeAction4, CardService.ComposedEmailType.REPLY_AS_DRAFT); 
-  var text5 = step_data[0][4] +'のテンプレートを呼び出す';
-   var composeAction5 = CardService.newAction()
-                                 .setFunctionName('SendEmail')
-                                 .setParameters({row_number:'8'});
-  var send_email5 = CardService.newTextButton()
-                              .setText(text5)
-                              .setComposeAction(composeAction5, CardService.ComposedEmailType.REPLY_AS_DRAFT);                                                           
+  section.addWidget(checkboxGroup);
+
+//  var send_email1;
+  for (var i = 0; i < arr_todo.length; i++) {
+//    Logger.log("arr_todo:"+arr_todo[i].work_name);
+     var name = arr_todo[i].work_name;
+    if (arr_todo[i].project_id == project_data.project_id) { 
+       for(var j = 0 ;j< arr_work.length;j++){ 
+
+         if (arr_work[j].work_id == arr_todo[i].work_id.toUpperCase()){
+                 Logger.log("work_id _xxxxx_:"+arr_work[j].work_content);
+            var text1 = arr_work[j].work_name+'のテンプレートを呼び出す';
+            var composeAction1 = CardService.newAction()
+                                           .setFunctionName('SendEmail')
+                                           .setParameters({row_number:'4'});
+            var send_email1 = CardService.newTextButton()
+                                        .setText(text1)
+                                        .setComposeAction(composeAction1, CardService.ComposedEmailType.REPLY_AS_DRAFT);  
+         
+           section.addWidget(send_email1);
+         }
+
+       }
+    
+    }
+ }   
+ 
+//  var text1 = step_data[0][0] +'のテンプレートを呼び出す';
+//  var composeAction1 = CardService.newAction()
+//                                 .setFunctionName('SendEmail')
+//                                 .setParameters({row_number:'4'});
+//  var send_email1 = CardService.newTextButton()
+//                              .setText(text1)
+//                              .setComposeAction(composeAction1, CardService.ComposedEmailType.REPLY_AS_DRAFT);  
+//                              
+//  var text2 = step_data[0][1] +'のテンプレートを呼び出す';
+//  var composeAction2 = CardService.newAction()
+//                                 .setFunctionName('SendEmail')
+//                                 .setParameters({row_number:'5'});
+//  var send_email2 = CardService.newTextButton()
+//                              .setText(text2)
+//                              .setComposeAction(composeAction2, CardService.ComposedEmailType.REPLY_AS_DRAFT);   
+//  var text3 = step_data[0][2] +'のテンプレートを呼び出す';
+//  var composeAction3 = CardService.newAction()
+//                                 .setFunctionName('SendEmail')
+//                                 .setParameters({row_number:'6'});
+//  var send_email3 = CardService.newTextButton()
+//                              .setText(text3)
+//                              .setComposeAction(composeAction3, CardService.ComposedEmailType.REPLY_AS_DRAFT); 
+//  var text4 = step_data[0][3] +'のテンプレートを呼び出す';
+//   var composeAction4 = CardService.newAction()
+//                                 .setFunctionName('SendEmail')
+//                                 .setParameters({row_number:'7'});
+//  var send_email4 = CardService.newTextButton()
+//                              .setText(text4)
+//                              .setComposeAction(composeAction4, CardService.ComposedEmailType.REPLY_AS_DRAFT); 
+//  var text5 = step_data[0][4] +'のテンプレートを呼び出す';
+//   var composeAction5 = CardService.newAction()
+//                                 .setFunctionName('SendEmail')
+//                                 .setParameters({row_number:'8'});
+//  var send_email5 = CardService.newTextButton()
+//                              .setText(text5)
+//                              .setComposeAction(composeAction5, CardService.ComposedEmailType.REPLY_AS_DRAFT);     
+//                              
   var button = CardService.newTextButton()
     .setText("SPREADSHEETを開く")
     .setOpenLink(CardService.newOpenLink()
@@ -171,12 +258,12 @@ function BuildCard(project_data){
       .setText('Compose Reply')
       .setComposeAction(composeAction, CardService.ComposedEmailType.REPLY_AS_DRAFT);
       
-  section.addWidget(checkboxGroup);
-  section.addWidget(send_email1);
-  section.addWidget(send_email2);
-  section.addWidget(send_email3);
-  section.addWidget(send_email4);
-  section.addWidget(send_email5);
+//  section.addWidget(checkboxGroup);
+//  section.addWidget(send_email1);
+//  section.addWidget(send_email2);
+//  section.addWidget(send_email3);
+//  section.addWidget(send_email4);
+//  section.addWidget(send_email5);
   section.addWidget(button);
   //section.addWidget(composeAction);
   section.addWidget(composeButton);
