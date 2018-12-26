@@ -1,4 +1,12 @@
 var spread_sheet_id = '1DdCvhhFb-i3P3Px78sdww3qcv0o2iOpUvYMdM1gtK9M';
+/*
+var userProperties = PropertiesService.getUserProperties();
+var spread_sheet_id = userProperties.getProperty('spread_sheet_id');
+if(spread_sheet_id == null){
+  var spread_sheet_id = '1DdCvhhFb-i3P3Px78sdww3qcv0o2iOpUvYMdM1gtK9M';
+}
+Logger.log(spread_sheet_id);
+*/
 function buildAddOn(e) {
   var accessToken = e.messageMetadata.accessToken;
   GmailApp.setCurrentMessageAccessToken(accessToken);
@@ -15,9 +23,9 @@ function buildAddOn(e) {
   }
   return cards;
 } 
-//データ保存、必要がないかも
+  //データ保存
 function ProjectListData(){
-  var project_lists = Sheets.Spreadsheets.Values.get(spread_sheet_id, 'sheet2!b2:c20');
+  var project_lists = Sheets.Spreadsheets.Values.get(spread_sheet_id, 'sheet2!a2:b100');//project_name a2:b100
   var recents = [];
   for(var i=0;i < project_lists.values.length; i++){
     recents.push({
@@ -37,12 +45,13 @@ function ProjectData(project_data_id){
   return project_data;
 }
 
-//メールを発送機能が完成、しかしコードの整合が未完成
+//メールを発送機能
 function BuildCard(project_data){
+  var finish_status = 0;
   var project_status = ProjectData(project_data.id);
   var card = CardService.newCardBuilder();
   var section = CardService.newCardSection();
-  var step_data = Sheets.Spreadsheets.Values.get(spread_sheet_id, 'sheet2!d1:h1').values;
+  var step_data = Sheets.Spreadsheets.Values.get(spread_sheet_id, 'sheet2!d1:z1').values;
   var row_number = (project_data.id).toString();
   var checkboxGroup = CardService.newSelectionInput()
                                    .setType(CardService.SelectionInputType.CHECK_BOX)
@@ -53,23 +62,19 @@ function BuildCard(project_data){
   var process_name = CardService.newSelectionInput()
                                    .setType(CardService.SelectionInputType.DROPDOWN)
                                    .setFieldName('process_name'); 
-  var finish = 0;
   for (var i = 0; i < step_data[0].length; i++) {
     var name = step_data[0][i];
     if(project_status == undefined){
       checkboxGroup.addItem(name, name, false);
     } else if(project_status[0][i] == 'Done'){
       checkboxGroup.addItem(name, name, true); 
-      finish++;
+      finish_status++;
     } else {
       checkboxGroup.addItem(name, name, false);
     }
       process_name.addItem(name, name, false);
   } 
-  if(finish == Number(step_data[0].length)){
-    card.setHeader(CardService.newCardHeader().setTitle('1'));
-    return card.build();
-  } else {
+
     var compose_action_1 = CardService.newAction()
                                       .setFunctionName('SendEmail')
                                       .setParameters({mail_type:'create'});
@@ -92,15 +97,17 @@ function BuildCard(project_data){
                                    .setIconUrl("https://icon.png")
                                    .setContent("SELECT")
                                    .setButton(sheet_button);
+    var title = project_data.project_name + '(' +finish_status + '/'+ step_data[0].length + ')';
     section.addWidget(process_title);
     section.addWidget(checkboxGroup);
     section.addWidget(process_name);
     section.addWidget(create_button);
     section.addWidget(reply_button);
     card.addSection(section);
-    card.setHeader(CardService.newCardHeader().setTitle(project_data.project_name));
+    card.setHeader(CardService.newCardHeader().setTitle(title));
+    
     return card.build();
-  }
+  
 }
 
 //進捗完成されば、タスク

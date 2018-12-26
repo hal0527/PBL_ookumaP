@@ -5,36 +5,37 @@ function sheetAddOn(e){
   var section1 = CardService.newCardSection();
   var section2 = CardService.newCardSection();
   var sheet_id = PropertiesService.getUserProperties().getProperty('sheet_id');
-  var projects_list = Sheets.Spreadsheets.Values.get(spread_sheet_id, 'sheet2!b2:b').values;
+  var projects_list = Sheets.Spreadsheets.Values.get(spread_sheet_id, 'sheet2!A2:A').values;
   var sales_list = Sheets.Spreadsheets.Values.get(spread_sheet_id, 'sheet3!b2:b').values;
 
  //プロジェクト追加
   var project_name = CardService.newTextInput()
                            .setFieldName('project_name')
                            .setTitle('プロジェクト名を入力してください。');
-  var sales_name = CardService.newTextInput()
-                             .setFieldName('sales_name')
-                             .setTitle('担当者の名前を入力してください。');
+  var sales_name = CardService.newSelectionInput()
+                                   .setType(CardService.SelectionInputType.DROPDOWN)
+                                   .setTitle('担当者を選択してください。')
+                                   .setFieldName('sales_name'); 
   var button1 =  CardService.newTextButton()
-                           .setText('確認する')
+                           .setText('プロジェクトを作成する')
                            .setBackgroundColor('blue')
                            .setOnClickAction(CardService.newAction()
                                                         .setFunctionName("AddProject"));
-  section1.addWidget(project_name);
-  section1.addWidget(sales_name);
-  section1.addWidget(button1);
   //タスクの分配
   var projects = CardService.newSelectionInput()
                          .setType(CardService.SelectionInputType.DROPDOWN)
+                         .setTitle('プロジェクトを選択してください。')
                          .setFieldName('projects');
   for(var i = 0; i < projects_list.length;i++){
-    var project_range = 'sheet2!C'+(i+2);
+    var project_range = 'sheet2!B'+(i+2);
     projects.addItem(projects_list[i][0], project_range, false);
   }
   var sales = CardService.newSelectionInput()
                          .setType(CardService.SelectionInputType.DROPDOWN)
+                         .setTitle('担当者を選択してください。')
                          .setFieldName('sales');
   for(var i = 0; i < sales_list.length;i++){
+    sales_name.addItem(sales_list[i][0], sales_list[i][0],false);
     sales.addItem(sales_list[i][0], sales_list[i][0],false);
   }
   var button2 =  CardService.newTextButton()
@@ -42,6 +43,9 @@ function sheetAddOn(e){
                            .setBackgroundColor('blue')
                            .setOnClickAction(CardService.newAction()
                                                         .setFunctionName("GiveProject"));
+  section1.addWidget(project_name);
+  section1.addWidget(sales_name);
+  section1.addWidget(button1);                                                      
   section2.addWidget(projects);
   section2.addWidget(sales);
   section2.addWidget(button2);
@@ -66,9 +70,9 @@ function AddProject(e){
   var project_name = e.formInput.project_name;
   var worker_name = e.formInput.sales_name;
   var nav = CardService.newNavigation().popToRoot();
-  var project_num = Sheets.Spreadsheets.Values.get(spread_sheet_id, 'sheet2!B2:B').values.length;
+  var project_num = Sheets.Spreadsheets.Values.get(spread_sheet_id, 'sheet2!A2:A').values.length;
   var row_num = Number(project_num) + 2;
-  var range = 'sheet2!B' + row_num + ':C' + row_num;
+  var range = 'sheet2!A' + row_num + ':B' + row_num;
   var values = [
     [project_name,worker_name]
   ];
