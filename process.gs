@@ -13,8 +13,16 @@ function buildAddOn(e) {
   var project_list = ProjectListData();
   var cards = []; 
   if (project_list.length > 0) {
+   cards.push(CardService.newCardBuilder()
+                          .setHeader(CardService.newCardHeader()
+                                                .setTitle('---進行中のプロジェクト---'))
+                          .build());
     project_list.forEach(function(project_data) {
-        cards.push(BuildCard(project_data));
+       if(BuildProjectCard(project_data) == 0){
+         
+       } else {
+         cards.push(BuildProjectCard(project_data));
+       }
     });
   } else {
     cards.push(CardService.newCardBuilder()
@@ -38,20 +46,20 @@ function ProjectListData(){
 }
 
 function ProjectData(project_data_id){
-  var start_step = 'd'+ project_data_id;
-  var end_step = 'h'+ project_data_id;
+  var start_step = 'c'+ project_data_id;
+  var end_step = 'g'+ project_data_id;
   var range = 'sheet2!'+ start_step + ':' + end_step;
   var project_data = Sheets.Spreadsheets.Values.get(spread_sheet_id, range).values;
   return project_data;
 }
 
 //メールを発送機能
-function BuildCard(project_data){
+function BuildProjectCard(project_data){
   var finish_status = 0;
   var project_status = ProjectData(project_data.id);
   var card = CardService.newCardBuilder();
   var section = CardService.newCardSection();
-  var step_data = Sheets.Spreadsheets.Values.get(spread_sheet_id, 'sheet2!d1:z1').values;
+  var step_data = Sheets.Spreadsheets.Values.get(spread_sheet_id, 'sheet2!c1:z1').values;
   var row_number = (project_data.id).toString();
   var checkboxGroup = CardService.newSelectionInput()
                                    .setType(CardService.SelectionInputType.CHECK_BOX)
@@ -79,34 +87,42 @@ function BuildCard(project_data){
                                       .setFunctionName('SendEmail')
                                       .setParameters({mail_type:'create'});
     var create_button = CardService.newTextButton()
-                                   .setText('新規メールで呼び出す')
+                                   .setText('新規メールに引用する')
                                    .setComposeAction(compose_action_1, CardService.ComposedEmailType.REPLY_AS_DRAFT);
     var compose_action_2 = CardService.newAction()
                                    .setFunctionName('SendEmail')
                                    .setParameters({mail_type:'reply'});
     var reply_button = CardService.newTextButton()
-                                  .setText('返信メールで呼び出す')
+                                  .setText('返信メールに引用する')
                                   .setComposeAction(compose_action_2, CardService.ComposedEmailType.REPLY_AS_DRAFT);
-    var sheet_button = CardService.newTextButton()
-      .setText("SPREADSHEETを開く")
-      .setOpenLink(CardService.newOpenLink()
-          .setUrl("https://docs.google.com/spreadsheets/d/1DdCvhhFb-i3P3Px78sdww3qcv0o2iOpUvYMdM1gtK9M")
-          .setOpenAs(CardService.OpenAs.OVERLAY)
-          .setOnClose(CardService.OnClose.RELOAD_ADD_ON));
-    var process_title = CardService.newKeyValue()
-                                   .setIconUrl("https://icon.png")
-                                   .setContent("SELECT")
-                                   .setButton(sheet_button);
+    var process_title1 = CardService.newKeyValue()
+                                    .setIcon(CardService.Icon.DESCRIPTION)
+                                    .setContent("完了項目のみチェック");
+    var process_title2 = CardService.newKeyValue()
+                                    .setIcon(CardService.Icon.EMAIL)
+                                    .setContent("項目の確認メールを選択する");
+    var process_title3 = CardService.newKeyValue()
+                                    .setIcon(CardService.Icon.OFFER)
+                                    .setContent("シートを管理する")
+                                    .setOpenLink(CardService.newOpenLink()
+                                                          .setUrl("https://docs.google.com/spreadsheets/d/" + spread_sheet_id)
+                                                          .setOpenAs(CardService.OpenAs.OVERLAY)
+                                                          .setOnClose(CardService.OnClose.RELOAD_ADD_ON));                              
     var title = project_data.project_name + '(' +finish_status + '/'+ step_data[0].length + ')';
-    section.addWidget(process_title);
+    section.addWidget(process_title1);
     section.addWidget(checkboxGroup);
+    section.addWidget(process_title2);
     section.addWidget(process_name);
     section.addWidget(create_button);
     section.addWidget(reply_button);
+    section.addWidget(process_title3);
     card.addSection(section);
     card.setHeader(CardService.newCardHeader().setTitle(title));
-    
-    return card.build();
+    if(finish_status == step_data[0].length){
+      return 0;
+    } else {
+      return card.build();
+    }
   
 }
 
@@ -118,7 +134,7 @@ function StatusChange(e){
   Logger.log(e);
   var arr1 = [];
   var arr2 = [];
-  for(var i = 100; i < 105; i++){
+  for(var i = 99; i < 104; i++){
         arr1.push(String.fromCharCode(i));
   }
 
@@ -126,23 +142,22 @@ function StatusChange(e){
     var step_name = checked_group[i];
     switch (step_name)
     {  case "導入説明":
-            line_number = "d";
+            line_number = "c";
             break;
         case "アカウント発行依頼":
-            line_number = "e";
+            line_number = "d";
             break;
         case "サイト解析依頼":
-            line_number = "f";
+            line_number = "e";
             break;
         case "実装確認依頼":
-            line_number = "g";
+            line_number = "f";
             break;
         case "予算設定依頼":
-            line_number = "h";
+            line_number = "g";
             break; 
     }
     arr2.push(line_number);
-    Logger.log(line_number);
     var range = 'sheet2!' + line_number + row_number;
     var values = [
                     [
@@ -166,10 +181,12 @@ function StatusChange(e){
                  ];
     var value_range = Sheets.newValueRange();
     value_range.values = values;
+    Logger.log(different);
     var result = Sheets.Spreadsheets.Values.update(value_range, spread_sheet_id, range, {
     valueInputOption: 'RAW'}); 
   }
 }
+
 function SendEmail(e){
  var process_name = e.formInput.process_name;
  var mail_type = e.parameters.mail_type;

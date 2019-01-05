@@ -39,7 +39,7 @@ function sheetAddOn(e){
     sales.addItem(sales_list[i][0], sales_list[i][0],false);
   }
   var button2 =  CardService.newTextButton()
-                           .setText('確認する')
+                           .setText('変更する')
                            .setBackgroundColor('blue')
                            .setOnClickAction(CardService.newAction()
                                                         .setFunctionName("GiveProject"));

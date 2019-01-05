@@ -1,4 +1,4 @@
-//シートの設定・新規spreadシート
+//シートの設定・新規spreadシート すべて自分設定する
 function setAddOn(e){
   var accessToken = e.messageMetadata.accessToken;
   GmailApp.setCurrentMessageAccessToken(accessToken);
