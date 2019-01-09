@@ -5,8 +5,10 @@ function sheetAddOn(e){
   var section1 = CardService.newCardSection();
   var section2 = CardService.newCardSection();
   var sheet_id = PropertiesService.getUserProperties().getProperty('sheet_id');
-  var projects_list = Sheets.Spreadsheets.Values.get(spread_sheet_id, 'sheet2!A2:A').values;
-  var sales_list = Sheets.Spreadsheets.Values.get(spread_sheet_id, 'sheet3!b2:b').values;
+  var range_pro = 'sheet2!A2:A';
+  var range_sal = 'sheet3!B2:B';
+  var projects_list = Sheets.Spreadsheets.Values.get(spread_sheet_id, range_pro).values;
+  var sales_list = Sheets.Spreadsheets.Values.get(spread_sheet_id, range_sal).values;
 
  //プロジェクト追加
   var project_name = CardService.newTextInput()
@@ -27,6 +29,7 @@ function sheetAddOn(e){
                          .setTitle('プロジェクトを選択してください。')
                          .setFieldName('projects');
   for(var i = 0; i < projects_list.length;i++){
+   // var project_range = sheet2 + '!B'+(i+2);
     var project_range = 'sheet2!B'+(i+2);
     projects.addItem(projects_list[i][0], project_range, false);
   }
@@ -66,11 +69,13 @@ function sheetAddOn(e){
                     .build();
   
 }
+
 function AddProject(e){
   var project_name = e.formInput.project_name;
   var worker_name = e.formInput.sales_name;
   var nav = CardService.newNavigation().popToRoot();
-  var project_num = Sheets.Spreadsheets.Values.get(spread_sheet_id, 'sheet2!A2:A').values.length;
+  var range_pro = 'sheet2!A2:A';
+  var project_num = Sheets.Spreadsheets.Values.get(spread_sheet_id, range_pro).values.length;
   var row_num = Number(project_num) + 2;
   var range = 'sheet2!A' + row_num + ':B' + row_num;
   var values = [
