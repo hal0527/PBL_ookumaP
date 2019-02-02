@@ -5,19 +5,16 @@ function sheetAddOn(e){
   var section1 = CardService.newCardSection();
   var section2 = CardService.newCardSection();
   var sheet_id = PropertiesService.getUserProperties().getProperty('sheet_id');
-  var range_pro = 'sheet2!A2:A';
-  var range_sal = 'sheet3!B2:B';
+  var range_pro = sheet2 + '!A2:A'; 
   var projects_list = Sheets.Spreadsheets.Values.get(spread_sheet_id, range_pro).values;
-  var sales_list = Sheets.Spreadsheets.Values.get(spread_sheet_id, range_sal).values;
-
+ 
  //プロジェクト追加
   var project_name = CardService.newTextInput()
                            .setFieldName('project_name')
                            .setTitle('プロジェクト名を入力してください。');
-  var sales_name = CardService.newSelectionInput()
-                                   .setType(CardService.SelectionInputType.DROPDOWN)
-                                   .setTitle('担当者を選択してください。')
-                                   .setFieldName('sales_name'); 
+  var sales_name = CardService.newTextInput()
+                              .setTitle('担当者を入力してください。')
+                              .setFieldName('sales_name'); 
   var button1 =  CardService.newTextButton()
                            .setText('プロジェクトを作成する')
                            .setBackgroundColor('blue')
@@ -28,19 +25,18 @@ function sheetAddOn(e){
                          .setType(CardService.SelectionInputType.DROPDOWN)
                          .setTitle('プロジェクトを選択してください。')
                          .setFieldName('projects');
-  for(var i = 0; i < projects_list.length;i++){
-   // var project_range = sheet2 + '!B'+(i+2);
-    var project_range = 'sheet2!B'+(i+2);
-    projects.addItem(projects_list[i][0], project_range, false);
+  if(projects_list == undefined || null){
+    projects.addItem('', '', false);
+  } else {                       
+    for(var i = 0; i < projects_list.length;i++){
+      var project_range = sheet2 + '!B'+(i+2);
+      projects.addItem(projects_list[i][0], project_range, false);
+    }
   }
-  var sales = CardService.newSelectionInput()
-                         .setType(CardService.SelectionInputType.DROPDOWN)
-                         .setTitle('担当者を選択してください。')
+  var sales = CardService.newTextInput()
+                         .setTitle('担当者を入力してください。')
                          .setFieldName('sales');
-  for(var i = 0; i < sales_list.length;i++){
-    sales_name.addItem(sales_list[i][0], sales_list[i][0],false);
-    sales.addItem(sales_list[i][0], sales_list[i][0],false);
-  }
+  
   var button2 =  CardService.newTextButton()
                            .setText('変更する')
                            .setBackgroundColor('blue')
@@ -74,10 +70,14 @@ function AddProject(e){
   var project_name = e.formInput.project_name;
   var worker_name = e.formInput.sales_name;
   var nav = CardService.newNavigation().popToRoot();
-  var range_pro = 'sheet2!A2:A';
-  var project_num = Sheets.Spreadsheets.Values.get(spread_sheet_id, range_pro).values.length;
-  var row_num = Number(project_num) + 2;
-  var range = 'sheet2!A' + row_num + ':B' + row_num;
+  var range_pro = sheet2 + '!A2:A';
+  var project_num = Sheets.Spreadsheets.Values.get(spread_sheet_id, range_pro).values;
+  if(project_num == undefined || null){
+    var row_num = 2;
+  } else {
+    var row_num = Number(project_num.length) + 2;
+  }
+  var range = sheet2 + '!A' + row_num + ':B' + row_num;
   var values = [
     [project_name,worker_name]
   ];
@@ -106,6 +106,10 @@ function GiveProject(e){
   
   var result = Sheets.Spreadsheets.Values.update(value_range, spread_sheet_id, project_range, {
   valueInputOption: 'RAW'}); 
-  Logger.log(project_range);
-    Logger.log(sales_name);
+  return CardService.newActionResponseBuilder()
+                    .setNotification(CardService.newNotification()
+                    .setType(CardService.NotificationType.INFO)
+                    .setText("担当者を修正成功"))
+                    .setNavigation(nav)
+                    .build();
 }

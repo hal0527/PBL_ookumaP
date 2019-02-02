@@ -1,18 +1,15 @@
-var spread_sheet_id = '1DdCvhhFb-i3P3Px78sdww3qcv0o2iOpUvYMdM1gtK9M';
-/*
 var userProperties = PropertiesService.getUserProperties();
+var nav = CardService.newNavigation().popToRoot();
 var spread_sheet_id = userProperties.getProperty('spread_sheet_id');
 var sheet1 = userProperties.getProperty('sheet1_name');
 var sheet2 = userProperties.getProperty('sheet2_name');
-var sheet3 = userProperties.getProperty('sheet3_name');
-if(spread_sheet_id == null){
-  var spread_sheet_id = '1DdCvhhFb-i3P3Px78sdww3qcv0o2iOpUvYMdM1gtK9M';
-  var sheet1 = userProperties.getProperty('sheet1_name');
-  var sheet2 = userProperties.getProperty('sheet2_name');
-  var sheet3 = userProperties.getProperty('sheet3_name');
+if(spread_sheet_id == null || undefined){
+  spread_sheet_id = '1M05QfoasPgJpBC4CL58SVp6zx-MrhqsSSMyV735otvQ';
+  var sheet1 = 'templates';
+  var sheet2 = 'campaigns';
 }
 Logger.log(spread_sheet_id);
-*/
+
 function buildAddOn(e) {
   var accessToken = e.messageMetadata.accessToken;
   GmailApp.setCurrentMessageAccessToken(accessToken);
@@ -39,16 +36,23 @@ function buildAddOn(e) {
 } 
   //データ保存
 function ProjectListData(){
-  //var range = sheet2 + '!a2:b100';
-  var range = 'sheet2!a2:b30';
+  var range = sheet2 + '!a2:b30';
   var project_lists = Sheets.Spreadsheets.Values.get(spread_sheet_id, range);
   var recents = [];
-  for(var i=0;i < project_lists.values.length; i++){
+  if(project_lists.values == undefined || null){
     recents.push({
-      'id': i+2,
-      'project_name': project_lists.values[i][0],
-      'sales': project_lists.values[i][1]
+      'id': 'none',
+      'project_name': 'none',
+      'sales': 'none'
     });
+  } else {
+       for(var i=0;i < project_lists.values.length; i++){
+          recents.push({
+            'id': i+2,
+            'project_name': project_lists.values[i][0],
+            'sales': project_lists.values[i][1]
+          });
+        }
   }
    return recents;
 }
@@ -56,16 +60,19 @@ function ProjectListData(){
 function ProjectData(project_data_id){
   var start_step = 'c'+ project_data_id;
   var end_step = 'g'+ project_data_id;
-  //var range = sheet2 + '!'+ start_step + ':' + end_step;
-  var range = 'sheet2!'+ start_step + ':' + end_step;
-  var project_data = Sheets.Spreadsheets.Values.get(spread_sheet_id, range).values;
+  if(project_data_id == 'none'){
+    var project_data = [[]];
+  }else {
+    var range = sheet2 + '!'+ start_step + ':' + end_step;
+    var project_data = Sheets.Spreadsheets.Values.get(spread_sheet_id, range).values;
+  }
   return project_data;
 }
 
 //メールを発送機能
 function BuildProjectCard(project_data){
-//var range = sheet2 + '!c1:z1';
-  var range = 'sheet2!c1:z1';
+  var range = sheet2 + '!c1:z1';
+  //var range = 'sheet2!c1:z1';
   var finish_status = 0;
   var project_status = ProjectData(project_data.id);
   var card = CardService.newCardBuilder();
@@ -118,8 +125,14 @@ function BuildProjectCard(project_data){
                                     .setOpenLink(CardService.newOpenLink()
                                                           .setUrl("https://docs.google.com/spreadsheets/d/" + spread_sheet_id)
                                                           .setOpenAs(CardService.OpenAs.OVERLAY)
-                                                          .setOnClose(CardService.OnClose.RELOAD_ADD_ON));                              
-    var title = project_data.project_name + '(' +finish_status + '/'+ step_data[0].length + ')';
+                                                          .setOnClose(CardService.OnClose.RELOAD_ADD_ON));      
+    if(project_data.id == 'none'){
+      var title = '*タスクがありません*';
+      card.setHeader(CardService.newCardHeader().setTitle(title));
+      return card.build();
+    } else {
+      var title = project_data.project_name + '(' +finish_status + '/'+ step_data[0].length + ') 担当者：' + project_data.sales;
+    }                                                      
     section.addWidget(process_title1);
     section.addWidget(checkboxGroup);
     section.addWidget(process_title2);
@@ -169,8 +182,8 @@ function StatusChange(e){
             break; 
     }
     arr2.push(line_number);
-    //var range = sheet2 + '!' + line_number + row_number;
-    var range = 'sheet2!' + line_number + row_number;
+    var range = sheet2 + '!' + line_number + row_number;
+    //var range = 'sheet2!' + line_number + row_number;
     var values = [
                     [
                       'Done'
@@ -185,8 +198,7 @@ function StatusChange(e){
                 return arr2.indexOf(v)===-1 || arr1.indexOf(v)===-1
             });
   for(var i=0; i < different.length; i++){
-    //var range = sheet2 + '!' + different[i] + row_number;
-    var range = 'sheet2!' + different[i] + row_number;
+    var range = sheet2 + '!' + different[i] + row_number;
     var values = [
                     [
                        ''
@@ -222,11 +234,10 @@ function SendEmail(e){
             row_number = "8";
             break; 
     }
- //var range = sheet1 + '!b' + row_number + ':d' + row_number;
- var range = 'sheet1!b' + row_number + ':d' + row_number;
+ var range = sheet1 + '!b' + row_number + ':d' + row_number;
  var model_message = Sheets.Spreadsheets.Values.get(spread_sheet_id, range).values; 
  var mail = model_message[0][0];
- var subject = model_message[0][1];
+ var subject = model_message[0][1].toString();
  var main_body = model_message[0][2];
  if(mail_type == 'create'){
     var draft = GmailApp.createDraft(mail,subject,main_body);
@@ -242,8 +253,7 @@ function SendEmail(e){
 }
 function SendEmail1(e){
   var row_number = e.parameters.row_number;
-  //var range = sheet1 + '!b'+row_number+':d'+row_number;
-  var range = 'sheet1!b'+row_number+':d'+row_number;
+  var range = sheet1 + '!b'+row_number+':d'+row_number;
   var send_data = Sheets.Spreadsheets.Values.get(spread_sheet_id, range).values;
   var mail = send_data[0][0];
   var subject = send_data[0][1];
