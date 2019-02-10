@@ -71,8 +71,7 @@ function ProjectData(project_data_id){
 
 //メールを発送機能
 function BuildProjectCard(project_data){
-  var range = sheet2 + '!c1:z1';
-  //var range = 'sheet2!c1:z1';
+  var range = sheet2 + '!c1:m1';
   var finish_status = 0;
   var project_status = ProjectData(project_data.id);
   var card = CardService.newCardBuilder();
@@ -90,15 +89,16 @@ function BuildProjectCard(project_data){
                                    .setFieldName('process_name'); 
   for (var i = 0; i < step_data[0].length; i++) {
     var name = step_data[0][i];
+    var line_number = String.fromCharCode(i + 99);
     if(project_status == undefined){
-      checkboxGroup.addItem(name, name, false);
+      checkboxGroup.addItem(name, line_number, false);
     } else if(project_status[0][i] == 'Done'){
-      checkboxGroup.addItem(name, name, true); 
+      checkboxGroup.addItem(name, line_number, true); 
       finish_status++;
     } else {
-      checkboxGroup.addItem(name, name, false);
+      checkboxGroup.addItem(name, line_number, false);
     }
-      process_name.addItem(name, name, false);
+      process_name.addItem(name, i + 3, false);
   } 
 
     var compose_action_1 = CardService.newAction()
@@ -155,35 +155,15 @@ function StatusChange(e){
   var checked_group = e.formInputs.check_box;
   var row_number = e.parameters.row_number;
   var line_number;
-  Logger.log(e);
   var arr1 = [];
   var arr2 = [];
   for(var i = 99; i < 104; i++){
         arr1.push(String.fromCharCode(i));
   }
-//自動化不足
   for(var i = 0; i < checked_group.length; i++){
-    var step_name = checked_group[i];
-    switch (step_name)
-    {  case "導入説明":
-            line_number = "c";
-            break;
-        case "アカウント発行依頼":
-            line_number = "d";
-            break;
-        case "サイト解析依頼":
-            line_number = "e";
-            break;
-        case "実装確認依頼":
-            line_number = "f";
-            break;
-        case "予算設定依頼":
-            line_number = "g";
-            break; 
-    }
+    line_number = checked_group[i];
     arr2.push(line_number);
     var range = sheet2 + '!' + line_number + row_number;
-    //var range = 'sheet2!' + line_number + row_number;
     var values = [
                     [
                       'Done'
@@ -212,28 +192,10 @@ function StatusChange(e){
   }
 }
 
-//自動化不足
 function SendEmail(e){
  var process_name = e.formInput.process_name;
  var mail_type = e.parameters.mail_type;
- var row_number;
- switch (process_name)
-    {  case "導入説明":
-            row_number = "4";
-            break;
-        case "アカウント発行依頼":
-            row_number = "5";
-            break;
-        case "サイト解析依頼":
-            row_number = "6";
-            break;
-        case "実装確認依頼":
-            row_number = "7";
-            break;
-        case "予算設定依頼":
-            row_number = "8";
-            break; 
-    }
+ var row_number = parseFloat(process_name);
  var range = sheet1 + '!b' + row_number + ':d' + row_number;
  var model_message = Sheets.Spreadsheets.Values.get(spread_sheet_id, range).values; 
  var mail = model_message[0][0];
